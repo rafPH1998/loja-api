@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class ProductImage extends Model
 {
@@ -15,4 +16,16 @@ class ProductImage extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    protected $appends = ['image_url'];
+
+    public function getImageUrlAttribute()
+    {
+        if ($this->url) {
+            return asset('storage/' . $this->url);
+        }
+    
+        return asset('images/no-image.png');
+    }
+    
 }

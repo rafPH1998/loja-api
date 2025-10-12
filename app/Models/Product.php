@@ -29,4 +29,9 @@ class Product extends Model
     {
         return $this->hasMany(Order::class);
     }
+
+    public function metaData()
+    {
+        return $this->hasMany(ProductMetaData::class);
+    }
 }

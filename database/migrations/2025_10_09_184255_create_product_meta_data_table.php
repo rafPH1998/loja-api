@@ -13,8 +13,6 @@ return new class extends Migration
     {
         Schema::create('product_meta_data', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('slug')->unique();
             $table->string('category_meta_data_id');
             $table->string('meta_data_value_id');
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');

@@ -18,11 +18,12 @@ class Banner extends Model
 
     public function getImageUrlAttribute()
     {
-        if ($this->image) {
-            return Storage::url($this->image);
+        if ($this->img) {
+            return asset('storage/' . $this->img);
         }
-
+    
         return asset('images/no-image.png');
     }
+    
     
 }
