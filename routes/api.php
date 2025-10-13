@@ -11,6 +11,7 @@ Route::get('/', function () {
 
 Route::resource('/banners', BannerController::class);
 Route::resource('/products', ProductController::class);
+Route::get('/products/{id}/related', [ProductController::class, 'getRelatedProducts']);
 
 /* Route::get('/user', function (Request $request) {
     return $request->user();

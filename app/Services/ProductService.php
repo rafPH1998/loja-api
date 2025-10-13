@@ -33,5 +33,33 @@ class ProductService
 
         return $data;
     }
+
+    public function getProduct(int $id)
+    {
+        $product = Product::with(['images', 'category'])->findOrFail($id);
+
+        if ($product) {
+            $product->increment('views_count');
+        }
+
+        return $product;
+    }
+
+    public function relatedProducts(int $id)
+    {
+        $product = Product::select('id', 'category_id')->findOrFail($id);
+    
+        $relatedProducts = Product::with([
+                'images' => fn($query) => $query->limit(1),
+                'category'
+            ])
+            ->where('category_id', $product->category_id)
+            ->where('id', '!=', $product->id)
+            ->orderByDesc('views_count')
+            ->get();
+    
+        return $relatedProducts;
+    }
+    
     
 }

@@ -56,11 +56,23 @@ class ProductController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(int $id)
     {
-        //
+        return response()->json([
+            'error' => null,
+            'product' => $this->productService->getProduct($id),
+            'related products' => $this->productService->relatedProducts($id),
+        ]);
     }
 
+    public function getRelatedProducts(int $id)
+    {
+        return response()->json([
+            'error' => null,
+            'related products' => $this->productService->relatedProducts($id),
+        ]);
+    }
+    
     /**
      * Show the form for editing the specified resource.
      */
