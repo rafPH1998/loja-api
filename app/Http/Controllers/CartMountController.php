@@ -8,11 +8,14 @@ use App\Http\Requests\CartShippingRequest;
 use App\Models\Address;
 use App\Models\Product;
 use App\Services\OrderService;
+use App\Services\StripeService;
 
 class CartMountController extends Controller
 {
-    public function __construct(protected OrderService $orderService)
-    { }
+    public function __construct(
+        protected OrderService $orderService,
+        protected StripeService $stripeService,
+    ){ }
 
     /**
      * Handle the incoming request.
@@ -39,20 +42,43 @@ class CartMountController extends Controller
         ]);
     }
 
-    public function finishCart(CartFinishRequest $request)
+    public function checkoutPaymentCart(CartFinishRequest $request)
     {
         $shippingCost = 7;
         $shippingDays = 3;
         $user = $request->user();
 
         try {
-            $address = Address::query()->where('id', '=', $request->addressId)->first();
-            $this->orderService->createOrder($user->id, $address, $shippingCost, $shippingDays, $request->cart);
-            $url = "";
+            $address = Address::findOrFail($request->addressId);
 
-            
-            return response()->json(["error" => null, "url" => $url]);
-    
+            $orderId = $this->orderService->createOrder(
+                $user->id,
+                $address,
+                $shippingCost,
+                $shippingDays,
+                $request->cart
+            );
+
+            if (!$orderId) {
+                return response()->json(['error' => 'Ocorreu um erro ao obter o pedido']);
+            }
+
+            $stripeUrl = $this->stripeService->createCheckoutSession(
+                $user,
+                $request->cart,
+                $orderId,
+                $address->id
+            );
+
+            if (!$stripeUrl) {
+                return response()->json(['error' => 'Ocorreu um erro ao obter a URL do pedido']);
+            }
+
+            return response()->json([
+                'error' => null,
+                'url' => $stripeUrl,
+            ], 200);
+
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Erro ao criar sessão de checkout: ' . $e->getMessage(),
@@ -60,4 +86,5 @@ class CartMountController extends Controller
             ], 500);
         }
     }
+
 }

@@ -28,5 +28,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/category/{slug}/metadata', CategoryController::class);
     Route::get('/cart/mount', [CartMountController::class, 'cartMound']);
     Route::get('/cart/shipping', [CartMountController::class, 'cartShipping']);
-    Route::post('/cart/finish', [CartMountController::class, 'finishCart']);
+    Route::post('/cart/checkout-payment', [CartMountController::class, 'checkoutPaymentCart']);
 });
