@@ -196,7 +196,7 @@ This document describes all available API routes, their parameters, request/resp
   }
   ```
 
-### `POST /cart/finish`
+### `POST /cart/checkout-payment`
 - **Description:** Finish the cart and create an order (returns Stripe checkout URL).
 - **Auth:** Yes (Bearer token)
 - **Body:**

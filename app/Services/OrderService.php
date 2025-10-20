@@ -8,7 +8,6 @@ use App\Models\Product;
 
 class OrderService 
 {
-
     public function createOrder(
         int $userId,
         Address $address,
@@ -55,5 +54,16 @@ class OrderService
         }
 
         return $order->id;
+    }
+
+    public function updateOrderStatus(int $orderId, string $status): ?bool
+    {
+        $order = Order::find($orderId);
+        if (!$order) {
+            return null;
+        }
+
+        $order->status = $status;
+        return $order->save();
     }
 }

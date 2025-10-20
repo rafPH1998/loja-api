@@ -21,6 +21,11 @@ class Order extends Model
         'shipping_complement',
     ];
 
+    const STATUS_PENDING = 'pending';
+    const STATUS_PAID = 'paid';
+    const STATUS_EXPIRED = 'expired';
+    const STATUS_CANCELLED = 'cancelled';
+
     public function user()
     {
         return $this->belongsTo(User::class);

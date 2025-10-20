@@ -6,6 +6,7 @@ use App\Http\Controllers\CartMountController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WebHookController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -14,6 +15,8 @@ Route::get('/', function () {
 
 Route::post('/login', [AuthController::class, 'auth']);
 Route::post('/register', [AuthController::class, 'register']);
+
+Route::post('/webhook/stripe', [WebHookController::class, 'stripe']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user-addresses', [UserController::class, 'addAddresses']);
