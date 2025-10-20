@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WebHookController;
+use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -17,6 +18,7 @@ Route::post('/login', [AuthController::class, 'auth']);
 Route::post('/register', [AuthController::class, 'register']);
 
 Route::post('/webhook/stripe', [WebHookController::class, 'stripe']);
+Route::get('/orders/session', [OrderController::class, 'getOrderBySessionId']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user-addresses', [UserController::class, 'addAddresses']);
@@ -32,4 +34,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/cart/mount', [CartMountController::class, 'cartMound']);
     Route::get('/cart/shipping', [CartMountController::class, 'cartShipping']);
     Route::post('/cart/checkout-payment', [CartMountController::class, 'checkoutPaymentCart']);
+
+    Route::get('/orders', [OrderController::class, 'getListOrders']);
+    Route::get('/orders/{orderId}', [OrderController::class, 'getOrderUser']);
 });

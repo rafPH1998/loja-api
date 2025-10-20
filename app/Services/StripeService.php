@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Product;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 use Stripe\Stripe;
 use Stripe\Checkout\Session as StripeSession;
 
@@ -63,4 +64,27 @@ class StripeService
 
         return $checkoutSession->url;
     }
+
+    /**
+    * Pega o pedido da sessão no stripe
+    *
+    * @param string $sessionId
+    */
+    public function getOrderIdFromSession(string $sessionId)
+    {
+        try {
+            $session = StripeSession::retrieve($sessionId);
+    
+            if ($session->payment_status !== 'paid') {
+                return null;
+            }
+    
+            return $session->metadata->order_id ?? null;
+    
+        } catch (\Exception $e) {
+            Log::error("Erro ao buscar sessão Stripe: " . $e->getMessage());
+            return null;
+        }
+    }
+    
 }

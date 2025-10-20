@@ -5,16 +5,12 @@ namespace App\Services;
 use App\Models\Address;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 
 class OrderService 
 {
-    public function createOrder(
-        int $userId,
-        Address $address,
-        int $shippingCost,
-        int $shippingDays,
-        array $cart
-    ): int
+    public function createOrder(int $userId, Address $address, int $shippingCost,int $shippingDays, array $cart): int
     {
         $orderItems = collect($cart)
             ->map(function ($item) {
@@ -66,4 +62,59 @@ class OrderService
         $order->status = $status;
         return $order->save();
     }
+
+    public function getListOrdersUser(User $user): Collection
+    {
+        $orders = Order::select('id', 'status', 'total', 'created_at')
+            ->where('user_id', $user->id)
+            ->orderBy('created_at', "DESC")
+            ->get();
+
+        return $orders;
+    }
+
+    /* 
+    RETORNO:
+
+    "order": {
+        "id": 1,
+        "status": "pending",
+        "total": 199.99,
+        "shippingCost": 7,
+        "shippingDays": 3,
+        "shippingZipcode": "12345-678",
+        "shippingStreet": "Street Name",
+        "shippingNumber": "123",
+        "shippingCity": "City",
+        "shippingState": "State",
+        "shippingCountry": "Country",
+        "shippingComplement": "Apt 1",
+        "createdAt": "2024-07-24T18:49:43.000Z",
+        "orderItems": [
+            {
+            "id": 1,
+            "quantity": 2,
+            "price": 99.99,
+            "product": {
+                "id": 1,
+                "label": "Product Name",
+                "price": 99.99,
+                "image": "media/products/<filename>"
+            }
+            }
+        ]
+    } 
+    */
+    public function getOrderUser(User $user, int $orderId): Collection
+    {
+        return Order::with([
+            'orderItems:id,order_id,product_id,quantity,price', 
+            'orderItems.product:id,label,category_id',          
+            'orderItems.product.category:id,name,slug'    
+        ])
+        ->where('user_id', $user->id)
+        ->where('id', $orderId)
+        ->get();
+    }
+    
 }

@@ -15,6 +15,8 @@ class Product extends Model
         'sales_count',
     ];
 
+    protected $appends = ['img_url'];
+
     public function images()
     {
         return $this->hasMany(ProductImage::class);
@@ -33,5 +35,11 @@ class Product extends Model
     public function metaData()
     {
         return $this->hasMany(ProductMetaData::class);
+    }
+
+    public function getImgUrlAttribute()
+    {
+        $firstImage = $this->images()->first();
+        return $firstImage ? $firstImage->image_url : asset('images/no-image.png');
     }
 }
