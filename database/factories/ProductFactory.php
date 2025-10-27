@@ -21,6 +21,7 @@ class ProductFactory extends Factory
             'label' => fake()->words(3, true),
             'price' => fake()->randomFloat(2, 10, 1000),
             'description' => fake()->paragraph(),
+            'liked' => false,
             'category_id' => Category::factory(),
             'views_count' => fake()->numberBetween(0, 1000),
             'sales_count' => fake()->numberBetween(0, 500),

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('label');
             $table->float('price');
+            $table->boolean('liked')->default(false);
             $table->text('description')->nullable();
             $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
             $table->integer('views_count')->default(0);
