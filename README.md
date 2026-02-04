@@ -4,7 +4,7 @@ This document describes all available API routes, their parameters, request/resp
 
 ---
 
-## Table of Contents
+## Table of contents
 - [General](#general)
 - [Banners](#banners)
 - [Products](#products)
