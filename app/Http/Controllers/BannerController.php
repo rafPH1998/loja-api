@@ -2,67 +2,72 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Banner;
 use App\Services\BannerService;
 use Illuminate\Http\Request;
 
 class BannerController extends Controller
 {
     public function __construct(protected BannerService $bannerService)
-    { }
+    {
+    }
 
     public function index()
     {
         return response()->json([
             'error' => null,
-            'banners' => $this->bannerService->getAll()
+            'banners' => $this->bannerService->getAll(),
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $data = $request->validate([
+            'img' => ['required', 'string', 'max:2048'],
+            'link' => ['nullable', 'string', 'max:2048'],
+        ]);
+
+        $banner = $this->bannerService->create([
+            'img' => $data['img'],
+            'link' => $data['link'] ?? '/',
+        ]);
+
+        return response()->json([
+            'error' => null,
+            'banner' => $banner,
+        ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Banner $banner)
     {
-        //
+        return response()->json([
+            'error' => null,
+            'banner' => $banner,
+        ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(Request $request, Banner $banner)
     {
-        //
+        $data = $request->validate([
+            'img' => ['sometimes', 'required', 'string', 'max:2048'],
+            'link' => ['nullable', 'string', 'max:2048'],
+        ]);
+
+        $banner = $this->bannerService->update($banner, $data);
+
+        return response()->json([
+            'error' => null,
+            'banner' => $banner,
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy(Banner $banner)
     {
-        //
-    }
+        $this->bannerService->delete($banner);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return response()->json([
+            'error' => null,
+            'message' => 'Banner removido com sucesso.',
+        ]);
     }
 }

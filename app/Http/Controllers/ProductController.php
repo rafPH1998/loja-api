@@ -2,66 +2,63 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Product;
 use App\OrderByEnum;
+use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use App\Services\ProductService;
 
 class ProductController extends Controller
 {
     public function __construct(protected ProductService $productService)
-    { }
+    {
+    }
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
         $validated = $request->validate([
             'orderBy' => ['nullable', Rule::in(OrderByEnum::values())],
-            'limit' => ['nullable', 'integer'],
-            'metadata' => ['nullable', 'string'],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:200'],
+            'metadata' => ['nullable'],
+            'category' => ['nullable', 'string'],
+            'search' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $filters = [
-            'metadata' => $validated['metadata'] ?? null,
-            'orderBy' => $validated['orderBy'] ?? null,
-            'limit' => $validated['limit'] ?? null,
-        ];
-
-        $products = $this->productService->getAll($filters);
+        $products = $this->productService->getAll($validated);
 
         return response()->json([
             'error' => null,
-            'products' => $products
+            'products' => $products,
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $data = $request->validate([
+            'label' => ['required', 'string', 'max:255'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'description' => ['nullable', 'string'],
+            'category_id' => ['required', 'exists:categories,id'],
+            'stock' => ['nullable', 'integer', 'min:0'],
+            'liked' => ['sometimes', 'boolean'],
+            'images' => ['nullable', 'array'],
+            'images.*' => ['string', 'max:2048'],
+        ]);
+
+        $product = $this->productService->create($data);
+
+        return response()->json([
+            'error' => null,
+            'product' => $product,
+        ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(int $id)
     {
         return response()->json([
             'error' => null,
             'product' => $this->productService->getProduct($id),
-            'related products' => $this->productService->relatedProducts($id),
+            'related' => $this->productService->relatedProducts($id),
         ]);
     }
 
@@ -69,31 +66,38 @@ class ProductController extends Controller
     {
         return response()->json([
             'error' => null,
-            'related products' => $this->productService->relatedProducts($id),
+            'related' => $this->productService->relatedProducts($id),
         ]);
     }
-    
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+
+    public function update(Request $request, Product $product)
     {
-        //
+        $data = $request->validate([
+            'label' => ['sometimes', 'required', 'string', 'max:255'],
+            'price' => ['sometimes', 'required', 'numeric', 'min:0'],
+            'description' => ['nullable', 'string'],
+            'category_id' => ['sometimes', 'required', 'exists:categories,id'],
+            'stock' => ['nullable', 'integer', 'min:0'],
+            'liked' => ['sometimes', 'boolean'],
+            'images' => ['nullable', 'array'],
+            'images.*' => ['string', 'max:2048'],
+        ]);
+
+        $product = $this->productService->update($product, $data);
+
+        return response()->json([
+            'error' => null,
+            'product' => $product,
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy(Product $product)
     {
-        //
-    }
+        $this->productService->delete($product);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return response()->json([
+            'error' => null,
+            'message' => 'Produto removido com sucesso.',
+        ]);
     }
 }

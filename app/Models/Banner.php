@@ -3,30 +3,30 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Banner extends Model
 {
     use HasFactory;
-    
-    protected $fillable = ['link', 'img'];
 
-   /*  public function user()
-    {
-        return $this->belongsTo(User::class);
-    } */
+    protected $fillable = ['link', 'img'];
 
     protected $appends = ['image_url'];
 
     public function getImageUrlAttribute()
     {
-        if ($this->img) {
-            return asset('storage/' . $this->img);
+        if (!$this->img) {
+            return asset('images/no-image.png');
         }
-    
-        return asset('images/no-image.png');
+
+        if (
+            str_starts_with($this->img, 'http://')
+            || str_starts_with($this->img, 'https://')
+            || str_starts_with($this->img, '/')
+        ) {
+            return $this->img;
+        }
+
+        return asset('storage/' . ltrim($this->img, '/'));
     }
-    
-    
 }

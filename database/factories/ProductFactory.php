@@ -25,6 +25,7 @@ class ProductFactory extends Factory
             'category_id' => Category::factory(),
             'views_count' => fake()->numberBetween(0, 1000),
             'sales_count' => fake()->numberBetween(0, 500),
+            'stock' => fake()->numberBetween(0, 80),
         ];
     }
 }

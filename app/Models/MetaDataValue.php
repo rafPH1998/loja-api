@@ -10,4 +10,9 @@ class MetaDataValue extends Model
     use HasFactory;
     
     protected $fillable = ['label', 'category_meta_data_id'];
+
+    public function metaData()
+    {
+        return $this->belongsTo(CategoryMetaData::class, 'category_meta_data_id');
+    }
 }

@@ -17,9 +17,18 @@ class Product extends Model
         'category_id',
         'views_count',
         'sales_count',
+        'stock',
     ];
 
     protected $appends = ['img_url'];
+
+    protected $casts = [
+        'price' => 'float',
+        'liked' => 'boolean',
+        'views_count' => 'integer',
+        'sales_count' => 'integer',
+        'stock' => 'integer',
+    ];
 
     public function images()
     {
@@ -31,9 +40,9 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
-    public function orders()
+    public function orderItems()
     {
-        return $this->hasMany(Order::class);
+        return $this->hasMany(OrderProduct::class);
     }
 
     public function metaData()
@@ -43,7 +52,14 @@ class Product extends Model
 
     public function getImgUrlAttribute()
     {
-        $firstImage = $this->images()->first();
-        return $firstImage ? $firstImage->image_url : asset('images/no-image.png');
+        $firstImage = $this->relationLoaded('images')
+            ? $this->images->first()
+            : $this->images()->first();
+
+        if (!$firstImage) {
+            return asset('images/no-image.png');
+        }
+
+        return $firstImage->image_url;
     }
 }

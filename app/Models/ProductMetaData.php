@@ -9,6 +9,8 @@ class ProductMetaData extends Model
 {
     use HasFactory;
 
+    protected $table = 'product_meta_data';
+
     protected $fillable = [
         'category_meta_data_id',
         'meta_data_value_id',
