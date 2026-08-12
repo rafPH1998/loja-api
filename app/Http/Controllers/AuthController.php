@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\AuthApiRequest;
 use App\Http\Requests\RegisterApiRequest;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
@@ -18,20 +17,28 @@ class AuthController extends Controller
         if (!$user || !Hash::check($req->password, $user->password)) {
             return response()->json(['error' => 'Credenciais inválidas'], 422);
         }
-        $user->tokens()->delete();
-        $token = $user->createToken($req->device_name)->plainTextToken;
-        return response()->json(['token' => $token]);
+
+        $token = $user->createToken($req->input('device_name', 'web'))->plainTextToken;
+
+        return response()->json([
+            'error' => null,
+            'token' => $token,
+            'user' => $user,
+        ]);
     }
 
     public function getUserAuth()
     {
-        $user = auth()->user();
-        return response()->json($user);
+        return response()->json([
+            'error' => null,
+            'user' => auth()->user(),
+        ]);
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
-        Auth::user()->tokens()->delete();
+        $request->user()?->currentAccessToken()?->delete();
+
         return response()->json([], Response::HTTP_NO_CONTENT);
     }
 
@@ -41,13 +48,15 @@ class AuthController extends Controller
             'name' => $req->name,
             'email' => $req->email,
             'password' => Hash::make($req->password),
+            'is_admin' => false,
         ]);
 
-        if ($newUser) {
-            $token = $newUser->createToken($req->name)->plainTextToken;
-            return response()->json(['token' => $token], 201);
-        }
+        $token = $newUser->createToken($req->input('device_name', 'web'))->plainTextToken;
 
-        return response()->json(['error' => 'Erro ao criar o usuário.']);
+        return response()->json([
+            'error' => null,
+            'token' => $token,
+            'user' => $newUser,
+        ], 201);
     }
 }

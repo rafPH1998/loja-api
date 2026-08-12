@@ -6,9 +6,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class RegisterApiRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
@@ -19,13 +16,11 @@ class RegisterApiRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'device_name' => ['nullable', 'string', 'max:100'],
         ];
     }
 
-    /**
-     * Mensagens personalizadas de erro (opcional).
-     */
     public function messages(): array
     {
         return [
