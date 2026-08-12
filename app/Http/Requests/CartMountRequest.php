@@ -6,23 +6,28 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class CartMountRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
+    protected function prepareForValidation(): void
+    {
+        $ids = $this->input('ids', []);
+
+        if (is_string($ids)) {
+            $ids = array_filter(array_map('intval', explode(',', $ids)));
+        }
+
+        $this->merge([
+            'ids' => array_values(array_filter((array) $ids)),
+        ]);
+    }
+
     public function rules(): array
     {
         return [
-            'ids' => ['required', 'array'],
+            'ids' => ['required', 'array', 'min:1'],
             'ids.*' => ['integer'],
         ];
     }

@@ -7,42 +7,44 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
-class OrderService 
+class OrderService
 {
-    public function createOrder(int $userId, Address $address, int $shippingCost,int $shippingDays, array $cart): int
+    public function createOrder(int $userId, Address $address, int $shippingCost, int $shippingDays, array $cart): int
     {
         $orderItems = collect($cart)
             ->map(function ($item) {
                 $product = Product::find($item['productId']);
-                if (!$product) return null;
+                if (!$product) {
+                    return null;
+                }
 
                 return [
                     'product_id' => $product->id,
-                    'quantity'   => $item['quantity'],
-                    'price'      => $product->price,
+                    'quantity' => $item['quantity'],
+                    'price' => $product->price,
                 ];
             })
-            ->filter() 
+            ->filter()
             ->values()
             ->toArray();
 
-        $subTotal = collect($orderItems)->sum(fn($item) => $item['price'] * $item['quantity']);
-
+        $subTotal = collect($orderItems)->sum(fn ($item) => $item['price'] * $item['quantity']);
         $total = $subTotal + $shippingCost;
 
         $order = Order::create([
-            'user_id'            => $userId,
-            'total'              => $total,
-            'shipping_cost'      => $shippingCost,
-            'shipping_days'      => $shippingDays,
-            'shipping_zipcode'   => $address->zipcode,
-            'shipping_street'    => $address->street,
-            'shipping_number'    => $address->number,
-            'shipping_city'      => $address->city,
-            'shipping_state'     => $address->state,
-            'shipping_country'   => $address->country,
-            'shipping_complement'=> $address->complement,
+            'user_id' => $userId,
+            'total' => $total,
+            'shipping_cost' => $shippingCost,
+            'shipping_days' => $shippingDays,
+            'shipping_zipcode' => $address->zipcode,
+            'shipping_street' => $address->street,
+            'shipping_number' => $address->number,
+            'shipping_city' => $address->city,
+            'shipping_state' => $address->state,
+            'shipping_country' => $address->country,
+            'shipping_complement' => $address->complement,
         ]);
 
         if (!empty($orderItems)) {
@@ -54,67 +56,57 @@ class OrderService
 
     public function updateOrderStatus(int $orderId, string $status): ?bool
     {
-        $order = Order::find($orderId);
+        $order = Order::with('orderItems')->find($orderId);
         if (!$order) {
             return null;
         }
 
+        $wasPaid = $order->status === Order::STATUS_PAID;
         $order->status = $status;
-        return $order->save();
+        $saved = $order->save();
+
+        if ($saved && $status === Order::STATUS_PAID && !$wasPaid) {
+            $this->registerSale($order);
+        }
+
+        return $saved;
     }
 
     public function getListOrdersUser(User $user): Collection
     {
-        $orders = Order::select('id', 'status', 'total', 'created_at')
+        return Order::select('id', 'status', 'total', 'shipping_cost', 'shipping_days', 'created_at')
+            ->withCount('orderItems')
             ->where('user_id', $user->id)
-            ->orderBy('created_at', "DESC")
+            ->orderBy('created_at', 'DESC')
             ->get();
-
-        return $orders;
     }
 
-    /* 
-    RETORNO:
-
-    "order": {
-        "id": 1,
-        "status": "pending",
-        "total": 199.99,
-        "shippingCost": 7,
-        "shippingDays": 3,
-        "shippingZipcode": "12345-678",
-        "shippingStreet": "Street Name",
-        "shippingNumber": "123",
-        "shippingCity": "City",
-        "shippingState": "State",
-        "shippingCountry": "Country",
-        "shippingComplement": "Apt 1",
-        "createdAt": "2024-07-24T18:49:43.000Z",
-        "orderItems": [
-            {
-            "id": 1,
-            "quantity": 2,
-            "price": 99.99,
-            "product": {
-                "id": 1,
-                "label": "Product Name",
-                "price": 99.99,
-                "image": "media/products/<filename>"
-            }
-            }
-        ]
-    } 
-    */
-    public function getOrderUser(User $user, int $orderId): Collection
+    public function getOrderUser(User $user, int $orderId): ?Order
     {
         return Order::with([
-            'orderItems:id,order_id,product_id,quantity,price', 
-            'orderItems.product:id,label,category_id',          
-            'orderItems.product.category:id,name,slug'    
+            'orderItems.product.images',
+            'orderItems.product.category:id,name,slug',
         ])
-        ->where('user_id', $user->id)
-        ->where('id', $orderId)
-        ->get();
+            ->where('user_id', $user->id)
+            ->where('id', $orderId)
+            ->first();
     }
-    
+
+    private function registerSale(Order $order): void
+    {
+        DB::transaction(function () use ($order) {
+            foreach ($order->orderItems as $item) {
+                $product = Product::find($item->product_id);
+                if (!$product) {
+                    continue;
+                }
+
+                $product->increment('sales_count', $item->quantity);
+
+                if ($product->stock > 0) {
+                    $product->decrement('stock', min($product->stock, $item->quantity));
+                }
+            }
+        });
+    }
 }

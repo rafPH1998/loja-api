@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-use Stripe\Stripe;
 use Stripe\Webhook;
 use App\Models\Order;
 use App\Services\OrderService;
@@ -21,6 +20,11 @@ class WebHookController extends Controller
         $webhookSecret = config('services.stripe.webhook_secret');
         $signature     = $request->header('Stripe-Signature');
         $payload       = $request->getContent();
+
+        if (!$webhookSecret) {
+            Log::error('Stripe webhook secret não configurado.');
+            return response()->json(['error' => 'Webhook não configurado'], 500);
+        }
 
         try {
             $event = Webhook::constructEvent($payload, $signature, $webhookSecret);

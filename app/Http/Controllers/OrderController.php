@@ -12,21 +12,19 @@ class OrderController extends Controller
     public function __construct(
         protected StripeService $stripeService,
         protected OrderService $orderService,
-    ){ }
-    
-    /**
-     * Handle the incoming request.
-     */
+    ) {
+    }
+
     public function getOrderBySessionId(Request $request): JsonResponse
     {
         $request->validate([
-            'session_id' => ['required', 'string']
+            'session_id' => ['required', 'string'],
         ]);
 
         $orderId = $this->stripeService->getOrderIdFromSession($request->session_id);
 
-        if(!$orderId) {
-            return response()->json(['error' => "Ocorreu um erro"]);
+        if (!$orderId) {
+            return response()->json(['error' => 'Pedido não encontrado para esta sessão.'], 404);
         }
 
         return response()->json(['error' => null, 'order_id' => $orderId]);
@@ -34,20 +32,19 @@ class OrderController extends Controller
 
     public function getListOrders(Request $request): JsonResponse
     {
-        $user = $request->user();
-
-        $orders = $this->orderService->getListOrdersUser($user);
+        $orders = $this->orderService->getListOrdersUser($request->user());
 
         return response()->json(['error' => null, 'orders' => $orders]);
     }
 
     public function getOrderUser(Request $request, int $orderId): JsonResponse
     {
-        $user = $request->user();
+        $order = $this->orderService->getOrderUser($request->user(), $orderId);
 
-        $order = $this->orderService->getOrderUser($user, $orderId);
+        if (!$order) {
+            return response()->json(['error' => 'Pedido não encontrado.'], 404);
+        }
 
         return response()->json(['error' => null, 'order' => $order]);
     }
-    
 }
