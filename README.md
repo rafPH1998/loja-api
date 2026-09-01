@@ -1,4 +1,4 @@
-# B7Store Backend API Documentation
+# B7Store Backend API Documentation - Teste
 
 This document describes all available API routes, their parameters, request/response types, and authentication requirements.
 
